@@ -350,6 +350,7 @@ function ReviewPanel(props: {
       {/* Realistic preview facts */}
       <section className="mt-8">
         <SectionLabel>The honest preview: what the candidate sees first</SectionLabel>
+        <p className="mt-1 text-xs text-muted-foreground">Tap any line to edit it, or add your own below.</p>
         <div className="mt-3 space-y-2">
           {model.previewFacts.map((f, i) => {
             const emphasis = f.category === "pay" || f.category === "location";
@@ -361,7 +362,8 @@ function ReviewPanel(props: {
               <input
                 value={f.value}
                 onChange={(e) => props.updateFact(i, e.target.value)}
-                className="flex-1 bg-transparent text-sm outline-none"
+                title="Tap to edit this fact"
+                className="flex-1 rounded-md border border-dashed border-transparent bg-transparent px-2 py-1 text-sm outline-none transition-colors hover:border-border hover:bg-muted/40 focus:border-solid focus:border-input focus:bg-background"
               />
               <button onClick={() => props.deleteFact(i)} className="text-muted-foreground transition-colors hover:text-destructive">
                 <Trash2 className="size-4" />
@@ -370,7 +372,7 @@ function ReviewPanel(props: {
             );
           })}
         </div>
-        <Button variant="ghost" size="sm" onClick={props.addFact} className="mt-2">
+        <Button variant="outline" size="sm" onClick={props.addFact} className="mt-2">
           <Plus /> Add fact
         </Button>
       </section>
@@ -380,6 +382,7 @@ function ReviewPanel(props: {
         <div className="flex items-center justify-between">
           <SectionLabel>The questions: {props.dealbreakerCount} dealbreaker{props.dealbreakerCount === 1 ? "" : "s"}</SectionLabel>
         </div>
+        <p className="mt-1 text-xs text-muted-foreground">Tap a question or an answer to edit it. Add answers or new questions below.</p>
         <motion.div
           className="mt-3 space-y-3"
           initial="hidden"
@@ -509,7 +512,8 @@ function CriterionCard(props: {
               value={c.prompt}
               onChange={(e) => props.onPatch({ prompt: e.target.value })}
               placeholder="The candidate-facing question…"
-              className="min-h-0 resize-none border-transparent bg-transparent px-0 text-[15px] font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+              title="Tap to edit the question"
+              className="min-h-0 w-full resize-none rounded-md border border-dashed border-transparent bg-transparent px-2 py-1 text-[15px] font-medium transition-colors hover:border-border hover:bg-muted/40 focus:border-input focus:border-solid focus:bg-background focus-visible:ring-0 focus-visible:ring-offset-0"
               rows={2}
             />
 
