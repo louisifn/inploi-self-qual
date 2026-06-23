@@ -21,6 +21,7 @@ const browser = await puppeteer.launch({
 try {
   const page = await browser.newPage();
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 2 });
+  if (process.env.DEMO_PASSWORD) await page.setExtraHTTPHeaders({ "x-demo-auth": process.env.DEMO_PASSWORD });
   await page.goto(base + path, { waitUntil: "networkidle0", timeout: 30000 });
   await new Promise((r) => setTimeout(r, waitMs));
   // Trailing args are button/link texts to click (each followed by a short wait).
