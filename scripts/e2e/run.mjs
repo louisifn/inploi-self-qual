@@ -264,7 +264,7 @@ try {
   {
     const page = await newPage(browser, 480, 1700);
     await page.goto(`${BASE}/recruiter/board/${JOB}`, { waitUntil: "networkidle0" });
-    await waitForText(page, "Applications");
+    await waitForText(page, "Active applications");
     assert("Board: shows a live indicator", await hasText(page, "Live"));
 
     // A new candidate submits on the "other device" (via API) while the board is open.

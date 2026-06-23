@@ -162,6 +162,15 @@ export function RecruiterSetup() {
           deleteFact={(i) =>
             update((m) => ({ ...m, previewFacts: m.previewFacts.filter((_, idx) => idx !== i) }))
           }
+          addFact={() =>
+            update((m) => ({
+              ...m,
+              previewFacts: [
+                ...m.previewFacts,
+                { label: "New fact", value: "", category: "hours", sourceQuote: "" },
+              ],
+            }))
+          }
         />
       )}
 
@@ -303,6 +312,7 @@ function ReviewPanel(props: {
   updateSummary: (field: "title" | "location" | "shiftPattern" | "payRange", val: string) => void;
   updateFact: (i: number, value: string) => void;
   deleteFact: (i: number) => void;
+  addFact: () => void;
 }) {
   const { model } = props;
   return (
@@ -360,6 +370,9 @@ function ReviewPanel(props: {
             );
           })}
         </div>
+        <Button variant="ghost" size="sm" onClick={props.addFact} className="mt-2">
+          <Plus /> Add fact
+        </Button>
       </section>
 
       {/* Criteria */}
@@ -528,6 +541,12 @@ function CriterionCard(props: {
                       </span>
                     );
                   })}
+                  <button
+                    onClick={() => props.onPatch({ options: [...c.options, "New answer"] })}
+                    className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Plus className="size-3" /> Add answer
+                  </button>
                 </div>
               </div>
             ) : (

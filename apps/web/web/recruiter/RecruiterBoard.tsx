@@ -55,7 +55,7 @@ export function RecruiterBoard() {
 
       <div className="mt-6 flex items-end justify-between">
         <div>
-          <h1 className="font-serif text-3xl tracking-tight">Applications</h1>
+          <h1 className="font-serif text-3xl tracking-tight">Active applications</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Only genuine, available, interested people. Triage on signal, not a CV.
           </p>

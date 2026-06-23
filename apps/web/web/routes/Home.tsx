@@ -1,23 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { z } from "zod";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { apiGet } from "@/lib/api";
-import { healthSchema, jobSummarySchema, type Health } from "@inploi/shared";
+import { healthSchema, type Health } from "@inploi/shared";
 import { Button } from "@/components/ui/button";
 
 export function Home() {
   const [health, setHealth] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [liveJobId, setLiveJobId] = useState<string | null>(null);
 
   useEffect(() => {
     apiGet("/api/health", healthSchema)
       .then(setHealth)
       .catch((e) => setError(String(e)));
-    apiGet("/api/jobs", z.array(jobSummarySchema))
-      .then((jobs) => setLiveJobId(jobs[0]?.id ?? null))
-      .catch(() => {});
   }, []);
 
   return (
@@ -39,10 +34,10 @@ export function Home() {
           </Link>
         </Button>
         <Button asChild size="lg" variant="outline">
-          <Link to={liveJobId ? `/candidate/${liveJobId}` : "/recruiter"}>Candidate: apply</Link>
+          <Link to="/candidate">Candidate: apply</Link>
         </Button>
         <Button asChild size="lg" variant="ghost">
-          <Link to={liveJobId ? `/recruiter/board/${liveJobId}` : "/recruiter/board"}>Live board</Link>
+          <Link to="/recruiter/board">Active applications</Link>
         </Button>
       </div>
 
