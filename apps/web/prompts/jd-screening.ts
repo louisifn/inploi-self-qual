@@ -16,6 +16,7 @@ What the evidence says, and how it must shape your output:
 
 Hard rules:
 - Generate 2 to 5 DEALBREAKERS, each a plain candidate-facing question with 2 to 4 answer options and a clear passValues subset. Mark routable=true for schedule/location/start (a better-fit role could resolve a "no"); mark routable=false for terminal ones like right-to-work.
+- Tag EVERY dealbreaker with its canonical "dimension" (weekends, early_start, start_timing, transport, right_to_work, or other), and fill "scheduleProfile" with this role's honest stance on each axis. These are used in CODE to route a poor-fit candidate to other real jobs that accommodate the exact axis they failed, so be literal to the JD: a weekday-only role is weekends:none, a 10am start is earliestStart:daytime, a "start whenever" role is startTiming:flexible, a walkable/central role is transport:accessible.
 - Generate 1 to 3 ROLE QUESTIONS (not dealbreakers) that surface transferable skill or genuine intent in the candidate's own words.
 - NEVER screen on, or proxy for, a protected characteristic (age, sex, race, disability, religion, etc.). If the JD implies anything like that, refuse it and name the refusal in "exclusions".
 - Populate "exclusions" with the criteria you deliberately did NOT generate and why (e.g. an experience requirement you converted to a transferable-skill question). This is a transparency artefact for the recruiter.
@@ -95,6 +96,7 @@ export const GOLDEN_SCREENING: GeneratedScreening = {
       options: ["Yes, most days", "Some days", "No, mornings don't work for me"],
       passValues: ["Yes, most days"],
       routable: true,
+      dimension: "early_start",
       rationale: "Early starts are the single biggest reason this role doesn't work out.",
     },
     {
@@ -104,6 +106,7 @@ export const GOLDEN_SCREENING: GeneratedScreening = {
       options: ["Yes, both", "One weekend day", "No, I can't do weekends"],
       passValues: ["Yes, both"],
       routable: true,
+      dimension: "weekends",
       rationale: "Weekend cover is the role's hardest constraint.",
     },
     {
@@ -117,6 +120,7 @@ export const GOLDEN_SCREENING: GeneratedScreening = {
       ],
       passValues: ["I live nearby / can walk or cycle", "I have reliable transport that early"],
       routable: true,
+      dimension: "transport",
       rationale: "A 5:45am start is unreachable by public transport from much of London.",
     },
     {
@@ -126,6 +130,7 @@ export const GOLDEN_SCREENING: GeneratedScreening = {
       options: ["This week", "Within 2 weeks", "In a month or more"],
       passValues: ["This week", "Within 2 weeks"],
       routable: true,
+      dimension: "start_timing",
       rationale: "The shop needs cover soon; a far-off start date is a practical mismatch.",
     },
     {
@@ -135,6 +140,7 @@ export const GOLDEN_SCREENING: GeneratedScreening = {
       options: ["Yes, I do", "Not yet"],
       passValues: ["Yes, I do"],
       routable: false,
+      dimension: "right_to_work",
       rationale: "A legal requirement and a terminal dealbreaker. No alternative role resolves it.",
     },
   ],
@@ -155,6 +161,12 @@ export const GOLDEN_SCREENING: GeneratedScreening = {
       rationale: "Genuine intent for the early start is the best signal we can ask for honestly.",
     },
   ],
+  scheduleProfile: {
+    weekends: "required",
+    earliestStart: "early",
+    startTiming: "immediate",
+    transport: "car_or_self",
+  },
   cvFocus: "fast-paced, customer-facing, or early-start work",
   exclusions: [
     "A minimum-years-of-barista-experience requirement: experience is a weak predictor of frontline performance, so we ask about transferable rush experience as a non-dealbreaker instead.",

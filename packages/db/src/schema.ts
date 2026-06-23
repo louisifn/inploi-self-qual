@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
-import type { PreviewFacts, CriteriaConfig, GapNotes } from "@inploi/shared";
+import type { PreviewFacts, CriteriaConfig, GapNotes, ScheduleProfile } from "@inploi/shared";
 
 /**
  * Cloudflare D1 / SQLite schema.
@@ -27,6 +27,8 @@ export const jobs = sqliteTable("jobs", {
   startDate: text("start_date"),
   // Canonical human-readable role facts double as the realistic-preview header.
   previewFacts: text("preview_facts", { mode: "json" }).$type<PreviewFacts>(),
+  // Canonical routable-axis stance (weekends/early-start/start-timing/transport) for dynamic routing.
+  scheduleProfile: text("schedule_profile", { mode: "json" }).$type<ScheduleProfile>(),
   status: text("status", { enum: ["draft", "live"] }).notNull().default("draft"),
   // A redirect-target stub role is not independently applied to in the demo.
   isRoutableTarget: integer("is_routable_target", { mode: "boolean" }).notNull().default(false),

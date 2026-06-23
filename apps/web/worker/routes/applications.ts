@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { makeDb, schema } from "../db";
 import {
   createApplicationRequestSchema,
@@ -15,7 +15,15 @@ import {
   buildFitRoutingPrompt,
   buildTemplatedRouting,
 } from "../../prompts/fit-routing";
-import { computeDecision, deriveSignals, evaluate, templatedSummary } from "../qualify";
+import {
+  computeDecision,
+  deriveSignals,
+  evaluate,
+  failedRoutableDimensions,
+  jobAccommodatesAll,
+  templatedSummary,
+  whyFromProfile,
+} from "../qualify";
 import { buildBoardApplication } from "../board";
 import type { AppEnv } from "../types";
 
@@ -119,50 +127,42 @@ applicationsRoutes.post("/:id/qualify", async (c) => {
   }
   if (responseRows.length) await db.insert(schema.responses).values(responseRows);
 
-  // Pre-filter genuinely-eligible alternative roles from the seeded routes.
+  // Dynamic routing: pick REAL jobs from the live pool whose canonical scheduleProfile
+  // accommodates EVERY axis the candidate failed. Selection is 100% in code; the model only
+  // writes the per-card copy below, and only for jobs this code already chose. Never invents one.
   let suggestedRoles: SuggestedRole[] = [];
   let routesForAi: { roleId: string; title: string; shiftPattern: string | null; reason: string | null }[] = [];
-  if (decisionInfo.decision === "self_select_out") {
-    const failedIds = decisionInfo.failedRoutable.map((e) => e.criterion.id);
-    if (failedIds.length) {
-      const routeRows = await db
-        .select({
-          toJobId: schema.jobRoutes.toJobId,
-          reason: schema.jobRoutes.reason,
-          title: schema.jobs.title,
-          location: schema.jobs.location,
-          shiftPattern: schema.jobs.shiftPattern,
-          payRange: schema.jobs.payRange,
-        })
-        .from(schema.jobRoutes)
-        .innerJoin(schema.jobs, eq(schema.jobRoutes.toJobId, schema.jobs.id))
-        .where(
-          and(
-            eq(schema.jobRoutes.fromJobId, app.jobId),
-            inArray(schema.jobRoutes.resolvesDealbreaker, failedIds),
-          ),
-        );
-      const seen = new Set<string>();
-      for (const r of routeRows) {
-        if (seen.has(r.toJobId)) continue;
-        seen.add(r.toJobId);
-        suggestedRoles.push({
-          jobId: r.toJobId,
-          title: r.title,
-          location: r.location,
-          shiftPattern: r.shiftPattern,
-          payRange: r.payRange,
-          whyItFits: r.reason ?? "Fits what you told us.",
-        });
-        if (suggestedRoles.length >= 3) break;
-      }
-      routesForAi = suggestedRoles.map((r) => ({
-        roleId: r.jobId,
-        title: r.title,
-        shiftPattern: r.shiftPattern,
-        reason: r.whyItFits,
-      }));
+  const failedDims = failedRoutableDimensions(decisionInfo.failedRoutable);
+  if (decisionInfo.decision === "self_select_out" && failedDims.length) {
+    const pool = await db
+      .select({
+        id: schema.jobs.id,
+        title: schema.jobs.title,
+        location: schema.jobs.location,
+        shiftPattern: schema.jobs.shiftPattern,
+        payRange: schema.jobs.payRange,
+        scheduleProfile: schema.jobs.scheduleProfile,
+      })
+      .from(schema.jobs)
+      .where(and(eq(schema.jobs.status, "live"), ne(schema.jobs.id, app.jobId)));
+    for (const j of pool) {
+      if (!j.scheduleProfile || !jobAccommodatesAll(j.scheduleProfile, failedDims)) continue;
+      suggestedRoles.push({
+        jobId: j.id,
+        title: j.title,
+        location: j.location,
+        shiftPattern: j.shiftPattern,
+        payRange: j.payRange,
+        whyItFits: whyFromProfile(j.scheduleProfile, failedDims),
+      });
+      if (suggestedRoles.length >= 3) break;
     }
+    routesForAi = suggestedRoles.map((r) => ({
+      roleId: r.jobId,
+      title: r.title,
+      shiftPattern: r.shiftPattern,
+      reason: r.whyItFits,
+    }));
   }
 
   // Author the message.
@@ -182,6 +182,13 @@ applicationsRoutes.post("/:id/qualify", async (c) => {
       body: "There's a hard requirement here that a different role couldn't get around, and you've been honest that it isn't a yes for you right now. We'd rather tell you straight than waste your time or pretend otherwise.",
     };
     suggestedRoles = [];
+  } else if (suggestedRoles.length === 0) {
+    // No real job in the pool accommodates what they need: honest no-match close. Never fabricate.
+    message = {
+      headline: `This role isn't the right fit, ${firstName}, and we don't have a better match right now.`,
+      body: "You've been honest about what works for you, and that matters more than forcing a bad fit. We don't have another open role that fits those needs today, so we won't pretend we do. New roles open regularly, so it's worth checking back soon.",
+    };
+    source = "fallback";
   } else {
     const missedAnswers = decisionInfo.failedRoutable.map((e) => e.answer ?? "");
     const fallback = buildTemplatedRouting(

@@ -43,6 +43,7 @@ export function mapScreeningToInserts(
     startDate: screening.jobSummary.startDate ?? null,
     description: rawJd,
     previewFacts: previewFactsFrom(screening),
+    scheduleProfile: screening.scheduleProfile,
     status: "live",
     isRoutableTarget: false,
     createdAt: new Date(now),
@@ -62,6 +63,7 @@ export function mapScreeningToInserts(
       options: d.options,
       passValues: d.passValues,
       routable: d.routable,
+      dimension: d.dimension,
     };
     criteria.push({
       id: newId(),

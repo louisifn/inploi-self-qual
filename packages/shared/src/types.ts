@@ -45,6 +45,27 @@ export type PreviewFact = z.infer<typeof previewFactSchema>;
 export const previewFactsSchema = z.array(previewFactSchema);
 export type PreviewFacts = z.infer<typeof previewFactsSchema>;
 
+// ── jobs.schedule_profile: canonical routable-axis stance, used for dynamic routing ──
+// Each generated/seeded job carries this so routing can match a candidate's failed axis
+// against other real jobs deterministically, without comparing free-text option strings.
+export const routableDimensionSchema = z.enum([
+  "weekends",
+  "early_start",
+  "start_timing",
+  "transport",
+  "right_to_work",
+  "other",
+]);
+export type RoutableDimension = z.infer<typeof routableDimensionSchema>;
+
+export const scheduleProfileSchema = z.object({
+  weekends: z.enum(["required", "optional", "none"]),
+  earliestStart: z.enum(["early", "daytime", "late"]),
+  startTiming: z.enum(["immediate", "flexible"]),
+  transport: z.enum(["car_or_self", "accessible"]),
+});
+export type ScheduleProfile = z.infer<typeof scheduleProfileSchema>;
+
 // ── screening_criteria.config (discriminated union keyed on `kind`) ───────────────
 // Carries both how the candidate UI renders the control AND the transparent,
 // candidate-visible self-report pass rule. `routable` distinguishes schedule/location
@@ -55,22 +76,26 @@ export const criteriaConfigSchema = z.discriminatedUnion("kind", [
     options: z.array(z.string()),
     passValues: z.array(z.string()), // answers that clear the dealbreaker
     routable: z.boolean().default(true),
+    dimension: routableDimensionSchema.optional(), // canonical axis, for dynamic routing
   }),
   z.object({
     kind: z.literal("multi_select"),
     options: z.array(z.string()),
     passValues: z.array(z.string()),
     routable: z.boolean().default(true),
+    dimension: routableDimensionSchema.optional(),
   }),
   z.object({
     kind: z.literal("boolean"),
     passValues: z.array(z.string()), // typically ["yes"]
     routable: z.boolean().default(false),
+    dimension: routableDimensionSchema.optional(),
   }),
   z.object({
     kind: z.literal("date"),
     passBeforeIso: z.string().optional(), // e.g. must be able to start before this date
     routable: z.boolean().default(true),
+    dimension: routableDimensionSchema.optional(),
   }),
   z.object({
     kind: z.literal("short_text"),

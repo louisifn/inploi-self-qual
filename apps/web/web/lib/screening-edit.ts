@@ -18,6 +18,8 @@ export type EditCriterion = {
   options: string[];
   passValues: string[];
   routable: boolean;
+  // Canonical routing axis, carried through edits (not exposed in the edit UI).
+  dimension: GeneratedScreening["dealbreakers"][number]["dimension"];
   rationale: string;
 };
 
@@ -25,6 +27,8 @@ export type EditModel = {
   jobSummary: GeneratedScreening["jobSummary"];
   previewFacts: GeneratedScreening["previewFacts"];
   criteria: EditCriterion[];
+  // Carried through edits so dynamic routing still works on a recruiter-posted job.
+  scheduleProfile: GeneratedScreening["scheduleProfile"];
   cvFocus: string;
   exclusions: string[];
 };
@@ -43,6 +47,7 @@ export function toEditModel(s: GeneratedScreening): EditModel {
     options: [...d.options],
     passValues: [...d.passValues],
     routable: d.routable,
+    dimension: d.dimension,
     rationale: d.rationale,
   }));
   const questions: EditCriterion[] = s.roleQuestions.map((q) => ({
@@ -55,12 +60,14 @@ export function toEditModel(s: GeneratedScreening): EditModel {
     options: q.options ? [...q.options] : [],
     passValues: [],
     routable: true,
+    dimension: "other",
     rationale: q.rationale,
   }));
   return {
     jobSummary: s.jobSummary,
     previewFacts: s.previewFacts,
     criteria: [...dealbreakers, ...questions],
+    scheduleProfile: s.scheduleProfile,
     cvFocus: s.cvFocus,
     exclusions: s.exclusions,
   };
@@ -79,6 +86,7 @@ export function fromEditModel(m: EditModel): GeneratedScreening {
         options,
         passValues: passValues.length ? passValues : [options[0]],
         routable: c.routable,
+        dimension: c.dimension,
         rationale: c.rationale,
       };
     });
@@ -96,6 +104,7 @@ export function fromEditModel(m: EditModel): GeneratedScreening {
     previewFacts: m.previewFacts,
     dealbreakers,
     roleQuestions,
+    scheduleProfile: m.scheduleProfile,
     cvFocus: m.cvFocus,
     exclusions: m.exclusions,
   };
@@ -106,6 +115,7 @@ export function blankCriterion(isDealbreaker: boolean): EditCriterion {
     key: nextKey(),
     isDealbreaker,
     genType: "availability",
+    dimension: "other",
     prompt: "",
     helpText: "",
     inputKind: isDealbreaker ? "single_select" : "short_text",

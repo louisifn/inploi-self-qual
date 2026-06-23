@@ -35,6 +35,9 @@ export const genDealbreakerSchema = z.object({
   routable: z
     .boolean()
     .describe("true for schedule/location (offer a better-fit role on fail); false for terminal like right-to-work"),
+  dimension: z
+    .enum(["weekends", "early_start", "start_timing", "transport", "right_to_work", "other"])
+    .describe("the canonical schedule axis this dealbreaker is about. Used in code to route a failing candidate to other real jobs that accommodate this exact axis. Use 'right_to_work' for right-to-work (terminal), 'other' only if none fit"),
   rationale: z.string().describe("why this matters for THIS role (recruiter-facing)"),
 });
 
@@ -59,6 +62,14 @@ export const generatedScreeningSchema = z.object({
   previewFacts: z.array(genPreviewFactSchema).min(2).max(8),
   dealbreakers: z.array(genDealbreakerSchema).min(1).max(6),
   roleQuestions: z.array(genRoleQuestionSchema).min(0).max(4),
+  scheduleProfile: z
+    .object({
+      weekends: z.enum(["required", "optional", "none"]).describe("does the role need weekend work? 'none' = weekday-only; 'optional' = weekends shared/opt-in; 'required' = must do weekends"),
+      earliestStart: z.enum(["early", "daytime", "late"]).describe("'early' = shifts start before ~7am; 'daytime' = ~8 to 10am; 'late' = afternoon/evening start"),
+      startTiming: z.enum(["immediate", "flexible"]).describe("'immediate' = must start within ~a week; 'flexible' = can start later/whenever"),
+      transport: z.enum(["car_or_self", "accessible"]).describe("'car_or_self' = needs own transport or is awkward to reach early; 'accessible' = easy by public transport or walkable"),
+    })
+    .describe("the role's canonical stance on each routable axis, derived from the JD. Used in code to match a candidate who fails one role against other real jobs that accommodate that axis. Be honest and literal to the JD"),
   cvFocus: z
     .string()
     .describe("what a gentle CV gap-check should look for, e.g. 'fast-paced, customer-facing or early-start work'"),

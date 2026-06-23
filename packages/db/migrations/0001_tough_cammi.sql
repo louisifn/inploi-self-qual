@@ -1,0 +1,1 @@
+ALTER TABLE `jobs` ADD `schedule_profile` text;

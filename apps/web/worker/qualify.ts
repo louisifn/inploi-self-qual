@@ -1,5 +1,5 @@
 import type { ScreeningCriterion } from "@inploi/db/schema";
-import type { FitFlag, GapNotes, IntentSignal } from "@inploi/shared";
+import type { FitFlag, GapNotes, IntentSignal, RoutableDimension, ScheduleProfile } from "@inploi/shared";
 
 /**
  * The honest fork is computed HERE, in code, never by the model. A dealbreaker passes only
@@ -103,6 +103,64 @@ export function deriveSignals(
   }));
 
   return { availabilityFit, intentSignal, gapNotes };
+}
+
+/**
+ * Dynamic routing helpers. A candidate who fails a routable dealbreaker is matched, in code,
+ * against other REAL jobs whose canonical scheduleProfile accommodates that exact axis. The
+ * model never selects targets; it only writes copy for the real jobs this code picks.
+ */
+
+/** The matchable axes the candidate failed (right_to_work is terminal; 'other' isn't routable). */
+export function failedRoutableDimensions(failedRoutable: Evaluated[]): RoutableDimension[] {
+  const dims = failedRoutable
+    .map((e) => {
+      const cfg = e.criterion.config;
+      return cfg && "dimension" in cfg ? cfg.dimension : undefined;
+    })
+    .filter((d): d is RoutableDimension => !!d && d !== "right_to_work" && d !== "other");
+  return [...new Set(dims)];
+}
+
+/** Does this job's profile genuinely accommodate a candidate who failed the given axis? */
+export function dimensionAccommodated(profile: ScheduleProfile, dim: RoutableDimension): boolean {
+  switch (dim) {
+    case "weekends":
+      return profile.weekends === "none" || profile.weekends === "optional";
+    case "early_start":
+      return profile.earliestStart === "daytime" || profile.earliestStart === "late";
+    case "start_timing":
+      return profile.startTiming === "flexible";
+    case "transport":
+      return profile.transport === "accessible";
+    default:
+      return false; // right_to_work / other: never a routing match
+  }
+}
+
+/** A job accommodates a candidate only if it clears EVERY axis they failed. */
+export function jobAccommodatesAll(profile: ScheduleProfile, dims: RoutableDimension[]): boolean {
+  return dims.length > 0 && dims.every((d) => dimensionAccommodated(profile, d));
+}
+
+/** A templated, attribute-true "why this fits" line, drawn only from the target's real profile. */
+export function whyFromProfile(profile: ScheduleProfile, dims: RoutableDimension[]): string {
+  const bits: string[] = [];
+  if (dims.includes("weekends") && profile.weekends !== "required") {
+    bits.push(profile.weekends === "none" ? "no weekend work" : "optional weekends");
+  }
+  if (dims.includes("early_start") && profile.earliestStart !== "early") {
+    bits.push(profile.earliestStart === "late" ? "a later start" : "a daytime start");
+  }
+  if (dims.includes("start_timing") && profile.startTiming === "flexible") {
+    bits.push("a flexible start date");
+  }
+  if (dims.includes("transport") && profile.transport === "accessible") {
+    bits.push("an easy commute");
+  }
+  if (!bits.length) return "Fits what you told us.";
+  const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(", ")} and ${bits[bits.length - 1]}`;
+  return `Offers ${list}.`;
 }
 
 /** A short, neutral, descriptive recruiter line (templated; never a grade). */

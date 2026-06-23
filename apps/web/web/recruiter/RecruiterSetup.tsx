@@ -317,7 +317,7 @@ function ReviewPanel(props: {
         </div>
         {props.source === "live" ? (
           <Badge variant="fit" className="shrink-0">
-            <Sparkles className="size-3" /> Drafted by Claude
+            <Sparkles className="size-3" /> Drafted by AI
           </Badge>
         ) : (
           <Badge variant="outline" className="shrink-0">
