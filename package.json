@@ -1,0 +1,29 @@
+{
+  "name": "inploi-self-qual",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.20.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "pnpm --filter @inploi/web db:migrate",
+    "db:migrate:remote": "pnpm --filter @inploi/web db:migrate:remote",
+    "cf-typegen": "pnpm --filter @inploi/web cf-typegen",
+    "seed": "curl -fsS -X POST http://localhost:5173/api/dev/seed && echo ' ✓ demo world seeded'",
+    "reset": "curl -fsS -X POST http://localhost:5173/api/dev/reset && echo ' ✓ reset to clean seeded state'",
+    "e2e": "node scripts/e2e/run.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.1.0",
+    "turbo": "^2.5.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ]
+  }
+}

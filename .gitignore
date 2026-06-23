@@ -1,0 +1,25 @@
+node_modules
+dist
+.turbo
+.wrangler
+
+# Secrets — never commit. Covers Cloudflare's .dev.vars and any .env, at any depth.
+# The *.example templates are kept (committed) as documentation.
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.env
+.env.*
+!.env.example
+*.local
+
+.DS_Store
+worker-configuration.d.ts
+
+# Third-party reference screenshot (visual ref only, not part of the deliverable)
+Job Application for Software Creative Technologist at Nothing.jpeg
+*.jpeg
+*.jpg
+.idea
+.vscode/*
+!.vscode/extensions.json
