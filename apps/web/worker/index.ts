@@ -8,7 +8,7 @@ import { applicationsRoutes } from "./routes/applications";
 import { cvRoutes } from "./routes/cv";
 import { answersRoutes } from "./routes/answers";
 import { authCookieHeader, demoGate, deriveToken, isAuthed } from "./auth";
-import { aiRateLimit } from "./rate-limit";
+import { aiRateLimit, rateLimit } from "./rate-limit";
 import type { AppEnv } from "./types";
 
 const app = new Hono<AppEnv>();
@@ -16,11 +16,16 @@ const app = new Hono<AppEnv>();
 // Gate the whole API (and the Gemini key) behind the demo access code when DEMO_PASSWORD is set.
 app.use("/api/*", demoGate);
 
+// Throttle login attempts so the access code can't be brute-forced (8 tries per IP per minute).
+app.use("/api/auth", rateLimit(8));
+
 // Per-IP backstop on the AI endpoints so the key can't be drained even with the access code.
 app.use("/api/jobs/generate", aiRateLimit);
 app.use("/api/cv/analyse", aiRateLimit);
 app.use("/api/answers/interpret", aiRateLimit);
 app.use("/api/applications/:id/qualify", aiRateLimit);
+// The seed makes ~10 live model calls per request, so cap it hard (3 per IP per minute).
+app.use("/api/dev/seed", rateLimit(3));
 
 /** Whether the gate is on, and whether this request is already through it. */
 app.get("/api/auth/status", async (c) =>
