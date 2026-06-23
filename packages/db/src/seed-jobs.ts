@@ -124,4 +124,32 @@ Because we have not opened yet, we need people who can start from next month rat
 Pay and hours
 12.70 pounds an hour plus tips. Part-time and full-time, 20 to 40 hours a week. Starts from next month. Five minutes from Highbury and Islington station.`,
   },
+  {
+    id: "job_brightspaces_daytime_cleaner",
+    prose: `Daytime Office Cleaner, Bright Spaces
+Bright Spaces, Shoreditch (E1)
+
+About the role
+A relaxed daytime cleaning role keeping a friendly co-working building fresh and tidy.
+
+The honest version
+This is an easy role to fit around life. Hours are daytime, 9am to 2pm, Monday to Friday, with no weekends at all and no early starts. The pace is steady, not rushed: surfaces, kitchens, washrooms and communal areas, with light tidying and restocking. You can start whenever suits you, this week or later, we are flexible. The building is central and a two-minute walk from Shoreditch High Street, easy to reach by bus or on foot without a car.
+
+Pay and hours
+12.30 pounds an hour. Part-time, 18 to 25 hours a week. Start date is flexible.`,
+  },
+  {
+    id: "job_greenline_deli_assistant",
+    prose: `Weekday Sandwich Shop Assistant, Greenline Deli
+Greenline Deli, Holborn (WC1)
+
+About the role
+Friendly lunch deli looking for a weekday assistant to make sandwiches and serve the regulars.
+
+The honest version
+A simple, sociable daytime job with no hard requirements beyond turning up ready to help. Hours are Monday to Friday, 8:30am to 3pm, with no weekends and no very early starts. You will make sandwiches and salads, serve customers, run the till and keep things clean and stocked. The start date is flexible, this week or whenever suits. We are central in Holborn, a short walk from the station and easy to reach by bus, so no car is needed.
+
+Pay and hours
+12.40 pounds an hour plus a share of tips. Part-time and full-time, 20 to 38 hours a week. Flexible start.`,
+  },
 ];
