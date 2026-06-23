@@ -35,6 +35,20 @@ type Phase = "loading" | "preview" | "questions" | "cv" | "submitting" | "result
 
 const finalizeSchema = z.object({ ok: z.boolean(), status: z.string() });
 
+// The redirect response also carries the candidate's details forward to the better-fit role.
+const redirectResponseSchema = z.object({
+  ok: z.boolean(),
+  status: z.string(),
+  prefill: z
+    .object({
+      candidateName: z.string(),
+      email: z.string(),
+      phone: z.string().nullable(),
+      cvText: z.string().nullable(),
+    })
+    .nullable(),
+});
+
 function passesLocally(c: ClientCriterion, answer: string): boolean {
   const cfg = c.config;
   if (!cfg) return true;
@@ -791,8 +805,14 @@ function ResultBlock({
   }
   async function takeRedirect(toJobId: string) {
     setBusy(true);
-    await apiPost(`/api/applications/${applicationId}/redirect`, { toJobId }, finalizeSchema).catch(() => {});
-    setFinalized("redirected");
+    const res = await apiPost(
+      `/api/applications/${applicationId}/redirect`,
+      { toJobId },
+      redirectResponseSchema,
+    ).catch(() => null);
+    // Send them to actually apply for the better-fit role, with their details carried over so the
+    // form is pre-filled. They still self-qualify for the new role themselves (never auto-passed).
+    navigate(`/candidate/${toJobId}`, { state: { prefill: res?.prefill ?? null } });
   }
 
   if (finalized === "submitted") {

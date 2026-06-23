@@ -271,11 +271,25 @@ applicationsRoutes.post("/:id/submit", async (c) => {
 applicationsRoutes.post("/:id/redirect", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { toJobId?: string };
   const db = makeDb(c.env.DB);
+  const id = c.req.param("id");
+  // Read the candidate's details first so we can carry them forward to the better-fit role.
+  const app = await db.query.applications.findFirst({ where: eq(schema.applications.id, id) });
   await db
     .update(schema.applications)
     .set({ status: "redirected", redirectedToJobId: body?.toJobId ?? null, updatedAt: new Date() })
-    .where(eq(schema.applications.id, c.req.param("id")));
-  return c.json({ ok: true, status: "redirected" });
+    .where(eq(schema.applications.id, id));
+  return c.json({
+    ok: true,
+    status: "redirected",
+    prefill: app
+      ? {
+          candidateName: app.candidateName,
+          email: app.email,
+          phone: app.phone ?? null,
+          cvText: app.cvText ?? null,
+        }
+      : null,
+  });
 });
 
 applicationsRoutes.post("/:id/withdraw", async (c) => {

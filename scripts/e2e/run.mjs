@@ -174,10 +174,15 @@ try {
     const outcome = (await api("GET", `/api/applications/${appId}`)).json;
     assert("Act3: candidate still in-progress until they choose (not auto-rejected)", outcome.status === "in_progress");
     await clickText(page, shown.title);
-    await waitForText(page, "better fit", 8000);
-    ok("Act3: taking a redirect → confirmation");
+    // Taking a redirect now sends them to apply for the better-fit role, pre-filled from before.
+    await waitForText(page, "carried over your details", 12000);
+    ok("Act3: taking a redirect → sent to apply for the better-fit role, pre-filled");
+    const prefilled = await page.evaluate(() =>
+      [...document.querySelectorAll("input")].some((i) => i.value && i.value.length > 1),
+    );
+    assert("Act3: better-fit apply form is pre-filled with their details", prefilled);
     const after = (await api("GET", `/api/applications/${appId}`)).json;
-    assert("Act3: status set to 'redirected' with a target", after.status === "redirected");
+    assert("Act3: original application marked 'redirected'", after.status === "redirected");
     const board = (await api("GET", `/api/applications?jobId=${JOB}`)).json;
     assert("Board: redirected candidate NEVER appears (the absence is the point)", !board.some((a) => a.candidateName === name));
     await page.close();

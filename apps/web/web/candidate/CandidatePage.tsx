@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Loader2, Paperclip } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api";
 import { NotFound } from "@/routes/NotFound";
@@ -24,16 +24,21 @@ Reliable, fit, used to early mornings. Looking to move into something more front
 export function CandidatePage() {
   const { jobId = "" } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Carried over from a better-fit redirect, so the candidate doesn't re-type what they told us.
+  const prefill =
+    (location.state as { prefill?: { candidateName?: string; email?: string; phone?: string | null; cvText?: string | null } } | null)
+      ?.prefill ?? null;
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState(prefill?.candidateName?.split(" ")[0] ?? "");
+  const [lastName, setLastName] = useState(prefill?.candidateName?.split(" ").slice(1).join(" ") ?? "");
+  const [email, setEmail] = useState(prefill?.email ?? "");
+  const [phone, setPhone] = useState(prefill?.phone ?? "");
   const [city, setCity] = useState("");
-  const [cvOpen, setCvOpen] = useState(false);
-  const [cvText, setCvText] = useState("");
+  const [cvOpen, setCvOpen] = useState(Boolean(prefill?.cvText));
+  const [cvText, setCvText] = useState(prefill?.cvText ?? "");
   const [fileName, setFileName] = useState<string | null>(null);
   const [hearAbout, setHearAbout] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -133,6 +138,13 @@ export function CandidatePage() {
             ),
           )}
         </div>
+
+        {prefill && (
+          <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            We've carried over your details from your last application, including your CV. Just check
+            they look right, then submit to qualify for this role.
+          </div>
+        )}
 
         {/* Prose (the truth is buried in here; Act 2b will surface it) */}
         <div className="mt-8 space-y-5">
