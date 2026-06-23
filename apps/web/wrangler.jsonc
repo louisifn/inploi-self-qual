@@ -2,8 +2,9 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "inploi-self-qual",
   "main": "./worker/index.ts",
-  // Custom domain (the workers.dev URL stays live as a backup). Wrangler provisions DNS + cert.
+  // Custom domain plus the workers.dev URL kept live as a backup (routes alone would disable it).
   "routes": [{ "pattern": "inploi.louisifnewman.com", "custom_domain": true }],
+  "workers_dev": true,
   "compatibility_date": "2025-06-04",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
