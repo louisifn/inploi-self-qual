@@ -22,7 +22,12 @@ import type { AppEnv } from "../types";
 
 export const jobsRoutes = new Hono<AppEnv>();
 
-/** Act 1: read a JD and generate the screening logic (AI SDK, Sonnet, golden fallback). */
+/**
+ * Act 1: read any JD and DRAFT the screening logic (dealbreakers, preview facts, role questions,
+ * schedule profile). The recruiter reviews and edits all of it before posting. The model never
+ * screens on experience or a protected characteristic, and there is no candidate to score here.
+ * Zod-validated against generatedScreeningSchema, versioned, golden fallback for demo-safe mode.
+ */
 jobsRoutes.post("/generate", async (c) => {
   const parsed = generateJobRequestSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) {

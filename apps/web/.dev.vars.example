@@ -1,4 +1,4 @@
 # Copy to .dev.vars and fill in to enable LIVE AI generation (Google Gemini).
-# Without a key, the app runs fully in demo-safe mode (golden fallbacks) — nothing breaks.
+# Without a key, the app runs fully in demo-safe mode (golden fallbacks), nothing breaks.
 # The provider + models are configured in worker/ai/config.ts.
 GEMINI_API_KEY=
