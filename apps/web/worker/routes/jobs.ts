@@ -68,7 +68,7 @@ jobsRoutes.post("/", async (c) => {
 /** List live, applyable jobs (excludes routable-target stubs). */
 jobsRoutes.get("/", async (c) => {
   const db = makeDb(c.env.DB);
-  await ensureSeeded(db);
+  await ensureSeeded(db, c.env);
   const rows = await db
     .select({
       id: schema.jobs.id,
@@ -86,7 +86,7 @@ jobsRoutes.get("/", async (c) => {
 /** Job detail + ordered screening criteria, Zod-validated. */
 jobsRoutes.get("/:id", async (c) => {
   const db = makeDb(c.env.DB);
-  await ensureSeeded(db);
+  await ensureSeeded(db, c.env);
   const id = c.req.param("id");
 
   const job = await db.query.jobs.findFirst({ where: eq(schema.jobs.id, id) });

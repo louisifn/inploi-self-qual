@@ -160,16 +160,20 @@ try {
   {
     const name = "Will Weekend";
     const { page, appId } = await runCandidateUI({ name, email: "will@example.com", cv: "", mode: "weekends" });
-    // Model-agnostic: the redirect headline/body are live-generated, but the better-fit role
-    // cards are code-prefiltered (fixed titles). Wait on one of those instead of the copy.
-    await waitForText(page, "Weekday Kitchen", 25000); // qualify runs live fit-routing first
-    ok("Act3: self-select-out outcome reached (better-fit roles shown)");
-    const roles = await page.evaluate(() => document.body.innerText);
-    assert("Act3: better-fit roles are offered", /Weekday|Daytime|Stockroom|Evenings/.test(roles));
+    // Routing is dynamic now: poll for ANY real pool job title to appear as an offered card.
+    const pool = (await api("GET", "/api/jobs")).json.filter((j) => j.id !== JOB);
+    let shown = null;
+    for (let i = 0; i < 60 && !shown; i++) {
+      const txt = await bodyText(page);
+      shown = pool.find((j) => txt.includes(j.title));
+      if (!shown) await sleep(400);
+    }
+    assert("Act3: self-select-out routes to a REAL pool job (never fabricated)", !!shown, shown ? "" : "no real job offered");
+    ok(`Act3: routed to a real job: ${shown?.title ?? "?"}`);
     await shot(page, "result-weekends");
     const outcome = (await api("GET", `/api/applications/${appId}`)).json;
     assert("Act3: candidate still in-progress until they choose (not auto-rejected)", outcome.status === "in_progress");
-    await clickText(page, "Weekday Kitchen");
+    await clickText(page, shown.title);
     await waitForText(page, "better fit", 8000);
     ok("Act3: taking a redirect → confirmation");
     const after = (await api("GET", `/api/applications/${appId}`)).json;
@@ -187,7 +191,8 @@ try {
     await waitForText(page, "honest no", 12000);
     ok("Act3: terminal outcome: respectful 'honest no'");
     const txt = await bodyText(page);
-    assert("Act3: terminal offers NO fabricated alternative roles", !/Weekday Kitchen|Daytime Café|Stockroom|Evenings Front/.test(txt));
+    const pool = (await api("GET", "/api/jobs")).json.filter((j) => j.id !== JOB);
+    assert("Act3: terminal offers NO alternative roles (no real pool job shown)", !pool.some((j) => txt.includes(j.title)));
     await shot(page, "result-terminal");
     await page.close();
   }
@@ -293,6 +298,37 @@ try {
     assert("Board: no sort/rank/score control or numeric grade present", selects === 0 && !/sort by|\brank\b|score:|\/100/i.test(txt), "found a ranking affordance");
     assert("Board: ordered by arrival (newest first)", txt.indexOf(liveName) < txt.indexOf("Priya Shah"));
     await page.close();
+  }
+
+  // ── 6b. Dynamic routing: real targets only, terminal stays terminal ───────────────
+  section("6b · Dynamic routing: real targets, no fabrication");
+  {
+    const ids = new Set((await api("GET", "/api/jobs")).json.map((j) => j.id));
+    const primary = (await api("GET", `/api/jobs/${JOB}`)).json;
+    const dbs = primary.criteria.filter((c) => c.isDealbreaker && c.config);
+    const answersFor = (faildim) =>
+      dbs.map((c) => {
+        const cfg = c.config;
+        let answer;
+        if (cfg.kind === "single_select") {
+          answer = cfg.dimension === faildim ? cfg.options.find((o) => !cfg.passValues.includes(o)) : cfg.passValues[0];
+        } else if (cfg.kind === "boolean") {
+          answer = cfg.dimension === faildim ? "no" : cfg.passValues[0];
+        }
+        return { criteriaId: c.id, answer };
+      });
+    const qualify = async (faildim) => {
+      const app = (await api("POST", "/api/applications", { jobId: JOB, candidateName: "Routing Probe", email: "rp@example.com" })).json;
+      return (await api("POST", `/api/applications/${app.applicationId}/qualify`, { answers: answersFor(faildim), gapExplanations: [] })).json;
+    };
+    const wk = await qualify("weekends");
+    assert("Routing: a failed routable axis self-selects out", wk.decision === "self_select_out");
+    assert("Routing: offers >= 1 real better-fit job", wk.suggestedRoles.length >= 1);
+    assert("Routing: EVERY routed jobId exists in the DB (never invented)", wk.suggestedRoles.every((r) => ids.has(r.jobId)));
+    const term = await qualify("right_to_work");
+    assert("Routing: terminal stays terminal, zero roles", term.decision === "terminal" && term.suggestedRoles.length === 0);
+    const strong = await qualify("__none__");
+    assert("Routing: all-pass is strong fit, zero roles", strong.decision === "strong_fit" && strong.suggestedRoles.length === 0);
   }
 
   // ── 7. Reset returns the board to the seeded baseline ─────────────────────────────

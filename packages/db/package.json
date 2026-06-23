@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     "./schema": "./src/schema.ts",
-    "./seed-data": "./src/seed-data.ts"
+    "./seed-data": "./src/seed-data.ts",
+    "./seed-jobs": "./src/seed-jobs.ts",
+    "./seed-jobs-golden": "./src/seed-jobs-golden.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
