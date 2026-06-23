@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/*
+  inploi self-qualification: design tokens.
+  A calm, trustworthy, editorial system. Warm paper + ink, a teal "fit" accent,
+  an amber "noted" state (dealbreakers are noted, never errors). Set once, inherited everywhere.
+*/
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Semantic self-qualification states */
+  --color-fit: var(--fit);
+  --color-fit-foreground: var(--fit-foreground);
+  --color-fit-muted: var(--fit-muted);
+  --color-noted: var(--noted);
+  --color-noted-foreground: var(--noted-foreground);
+  --color-noted-muted: var(--noted-muted);
+  --color-explain: var(--explain);
+  --color-explain-foreground: var(--explain-foreground);
+  --color-explain-muted: var(--explain-muted);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* inploi uses ONE rounded grotesque. No serif. Display = the same family, bold + tight. */
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Deliberately generic stack for the Act 2a "before" form, to sharpen the contrast. */
+  --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root {
+  /* Friendly, rounded radius; CTAs go full-pill via the Button component. */
+  --radius: 0.875rem;
+
+  /* inploi: white canvas, warm near-black ink (#212020), vivid orange (#FF4D00). */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.26 0.005 55);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.26 0.005 55);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.26 0.005 55);
+
+  /* Primary = inploi orange #FF4D00: the action colour, like their "Book a demo". */
+  --primary: oklch(0.665 0.23 40);
+  --primary-foreground: oklch(0.99 0.006 60);
+
+  --secondary: oklch(0.965 0.005 60);
+  --secondary-foreground: oklch(0.3 0.006 55);
+  --muted: oklch(0.97 0.004 60);
+  --muted-foreground: oklch(0.53 0.008 55);
+  --accent: oklch(0.955 0.03 50);
+  --accent-foreground: oklch(0.45 0.16 42);
+
+  --destructive: oklch(0.58 0.18 27);
+  --destructive-foreground: oklch(0.99 0.006 60);
+
+  --border: oklch(0.915 0.005 60);
+  --input: oklch(0.915 0.005 60);
+  --ring: oklch(0.665 0.23 40);
+
+  /* Fit = teal/spruce: the complement to orange (positive, honest). */
+  --fit: oklch(0.55 0.085 185);
+  --fit-foreground: oklch(0.99 0.003 95);
+  --fit-muted: oklch(0.955 0.032 185);
+
+  /* Noted = warm gold, nudged off the orange hue so it never reads as the CTA. */
+  --noted: oklch(0.78 0.13 88);
+  --noted-foreground: oklch(0.4 0.07 70);
+  --noted-muted: oklch(0.965 0.05 90);
+
+  /* Explain = quiet slate-blue (an invitation to add context). */
+  --explain: oklch(0.55 0.07 245);
+  --explain-foreground: oklch(0.99 0.003 95);
+  --explain-muted: oklch(0.96 0.025 250);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* inploi's faint dot-grid on white: light, optimistic texture, not flat colour. */
+    background-color: var(--background);
+    background-image: radial-gradient(oklch(0.26 0.005 55 / 0.045) 1px, transparent 1.4px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+  }
+  /* Display = the rounded grotesque, bold + tight (echoing inploi's headline type). */
+  .font-serif {
+    font-weight: 700;
+    letter-spacing: -0.022em;
+  }
+  /* inploi's signature: orange→ink radial gradient on hero words. */
+  .text-brand-gradient {
+    background: radial-gradient(70% 130% at 50% 0%, oklch(0.665 0.23 40) 0%, var(--foreground) 72%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  ::selection {
+    background-color: var(--fit-muted);
+  }
+  /* Honour reduced-motion globally: the three meaningful animations degrade to instant state. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
